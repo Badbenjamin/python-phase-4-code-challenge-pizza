@@ -25,5 +25,15 @@ def index():
     return "<h1>Code challenge</h1>"
 
 
+@app.route('/restaurants')
+def get_restaurants():
+    return [restaurant.to_dict(only=('address', 'id', 'name')) for restaurant in Restaurant.query.all()], 200
+
+@app.route('/restaurants/<int:id>')
+def get_restaurant_by_id(id):
+    restaurant = Restaurant.query.filter(Restaurant.id == id).first()
+    return restaurant.to_dict(), 200
+    
+
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
