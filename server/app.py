@@ -29,10 +29,37 @@ def index():
 def get_restaurants():
     return [restaurant.to_dict(only=('address', 'id', 'name')) for restaurant in Restaurant.query.all()], 200
 
-@app.route('/restaurants/<int:id>')
+@app.route('/restaurants/<int:id>', methods=['GET', 'DELETE'])
 def get_restaurant_by_id(id):
     restaurant = Restaurant.query.filter(Restaurant.id == id).first()
-    return restaurant.to_dict(), 200
+    if restaurant is None:
+        return {"error" : "Restaurant not found"}, 404
+    
+    if request.method == 'GET':
+        return restaurant.to_dict(), 200
+    if request.method == 'DELETE':
+        db.session.delete(restaurant)
+        db.session.commit()
+        return {}, 204
+    
+@app.route('/pizzas')
+def get_pizzas():
+    return [pizza.to_dict(only=('ingredients', 'id', 'name')) for pizza in Pizza.query.all()], 200
+
+@app.route('/restaurant_pizzas', methods=['POST'])
+def post_restaurant_pizza():
+    data = request.get_json()
+    try:
+        new_restaurant_pizza = RestaurantPizza(
+            price=data.get('price'),
+            pizza_id=data.get('pizza_id'),
+            restaurant_id=data.get('restaurant_id')
+        )
+    except ValueError:
+        return {"errors": ["validation errors"]}, 400
+    db.session.add(new_restaurant_pizza)
+    db.session.commit()
+    return new_restaurant_pizza.to_dict(), 201
     
 
 if __name__ == "__main__":
